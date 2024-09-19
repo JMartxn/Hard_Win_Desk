@@ -1,8 +1,8 @@
 # Hardening_Win_Desktop
-Estoy creando un fichero , desde un custom gpt, para ajustarlo, a generar un script que analice e informe de un sistema.
+## Esto es un ejercicio para practicar hardening en win desktop, power shell, scripting y custom gpt.
 
-Esto no es más que un ejercicio para hacer scripting en power shell y ayudarme generandolo con custom gpt
 
+REFERENCIA A SEÑALAR
 Una referencia para securizar un sistema windows es el software creado por https://www.fb-pro.com/hardening-tools-for-companies/
 En concreto https://www.fb-pro.com/audit-tap-product-information/
 
