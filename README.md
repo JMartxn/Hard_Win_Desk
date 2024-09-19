@@ -11,33 +11,46 @@ En este video se puede apreciar su gestión de blindaje de equipos desde un serv
 Esto es parte de los puntos que verifica instalando auditap en un equipo :
 
 CIS Benchmarks
- Registry Settings/Group Policies
- User Rights Assignment
- Account Policies
- Advanced Audit Policy Configuration
- Security Options
+
+    Registry Settings/Group Policies
+    User Rights Assignment
+    Account Policies
+    Advanced Audit Policy Configuration
+    Security Options
+
 Microsoft Benchmarks
- Registry Settings/Group Policies
- User Rights Assignment
- Account Policies
- Advanced Audit Policy Configuration
+
+    Registry Settings/Group Policies
+    User Rights Assignment
+    Account Policies
+    Advanced Audit Policy Configuration
+
 DISA Recommendations
- Registry Settings/Group Policies
- User Rights Assignment
- Account Policies
- Advanced Audit Policy Configuration
- Security Options
+
+    Registry Settings/Group Policies
+    User Rights Assignment
+    Account Policies
+    Advanced Audit Policy Configuration
+    Security Options
+
 ACSC Benchmarks
- Account Policies
- Advanced Audit Policy Configuration
- Registry Settings/Group Policies
- User Rights Assignment
- Security Options
+
+    Account Policies
+    Advanced Audit Policy Configuration
+    Registry Settings/Group Policies
+    User Rights Assignment
+    Security Options
+
 BSI Benchmarks SiSyPHuS Logging
- Registry Settings/Group Policies
- Advanced Audit Policy Configuration
-BSI Benchmarks SiSyPHus-BSI Telemetrie
- Registry Settings/Group Policies
-FB Pro recommendations
- Ciphers Suites and Hashes
- Enhanced security settings
+
+    Registry Settings/Group Policies
+    Advanced Audit Policy Configuration
+
+BSI Benchmarks SiSyPHuS-BSI Telemetrie
+
+    Registry Settings/Group Policies
+
+FB Pro Recommendations
+
+    Cipher Suites and Hashes
+    Enhanced Security Settings
