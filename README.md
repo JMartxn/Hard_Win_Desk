@@ -73,25 +73,24 @@ Rol o tono: Si es necesario, especificar un rol que el modelo debe adoptar (por 
 Ejemplo (opcional): Incluir un ejemplo de cómo debe ser la respuesta o cómo no debe ser, para dar mayor precisión.
 
 ESTRUCTURA 4:
-El mejor esquema para diseñar un prompt efectivo puede dividirse en los siguientes pasos:
 
-    Contexto o Rol del Modelo: Define el papel que quieres que asuma la IA. Esto puede influir en cómo responde el modelo y la precisión de la salida.
-        Ejemplo: "Actúa como un experto en marketing digital..."
+Contexto o Rol del Modelo: Define el papel que quieres que asuma la IA. Esto puede influir en cómo responde el modelo y la precisión de la salida.
+    Ejemplo: "Actúa como un experto en marketing digital..."
 
-    Objetivo Claro: Especifica qué es lo que quieres lograr con el prompt.
-        Ejemplo: "...y crea una estrategia para mejorar la visibilidad de una empresa en redes sociales."
+Objetivo Claro: Especifica qué es lo que quieres lograr con el prompt.
+    Ejemplo: "...y crea una estrategia para mejorar la visibilidad de una empresa en redes sociales."
 
-    Instrucciones Detalladas: Añade detalles sobre los elementos que quieres que el modelo considere al generar la respuesta.
-        Ejemplo: "Incluye tácticas de contenido, publicidad pagada, y colaboración con influencers."
+Instrucciones Detalladas: Añade detalles sobre los elementos que quieres que el modelo considere al generar la respuesta.
+    Ejemplo: "Incluye tácticas de contenido, publicidad pagada, y colaboración con influencers."
 
-    Formato de Salida: Define cómo quieres que se presente la respuesta, ya sea en forma de lista, tabla, párrafos, etc.
-        Ejemplo: "...presenta la estrategia en formato de lista con un análisis detallado de cada paso."
+Formato de Salida: Define cómo quieres que se presente la respuesta, ya sea en forma de lista, tabla, párrafos, etc.
+    Ejemplo: "...presenta la estrategia en formato de lista con un análisis detallado de cada paso."
 
-    Especificaciones Extra o Restricciones: Si hay restricciones o requisitos adicionales (como longitud, tono, estilo), inclúyelos.
-        Ejemplo: "Limita la extensión de cada punto a 3-4 párrafos y usa un tono profesional pero accesible."
+Especificaciones Extra o Restricciones: Si hay restricciones o requisitos adicionales (como longitud, tono, estilo), inclúyelos.
+    Ejemplo: "Limita la extensión de cada punto a 3-4 párrafos y usa un tono profesional pero accesible."
 
-    Ejemplos (Opcional): Si puedes, proporciona ejemplos para aclarar lo que esperas.
-        Ejemplo: "Por ejemplo, una campaña exitosa anterior fue..."
+Ejemplos (Opcional): Si puedes, proporciona ejemplos para aclarar lo que esperas.
+    Ejemplo: "Por ejemplo, una campaña exitosa anterior fue..."
 
 Ejemplo completo de un buen prompt siguiendo este esquema:
 
