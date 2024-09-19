@@ -64,7 +64,7 @@ ESTRUCTURA 2 :
 MISSION / INSTRUCTIONS / COMMANDS / PERSONA / RULES 
 
 ESTRUCTURA 3 :
-  # Esquema de prompt de Jon Hernandez
+Esquema de prompt de Jon Hernandez
 
 Contexto: Proporcionar al modelo suficiente contexto o antecedentes sobre el tema.
 Objetivo: Explicar claramente cuál es el objetivo o lo que se espera obtener con la interacción.
