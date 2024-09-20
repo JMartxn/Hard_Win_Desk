@@ -8,19 +8,19 @@ En concreto https://www.fb-pro.com/audit-tap-product-information/
 
 A tener en cuenta ...
 
-### CIS Benchmarks
+ CIS Benchmarks
 
-### Microsoft Benchmarks
+ Microsoft Benchmarks
 
-### DISA Recommendations
+ DISA Recommendations
 
-### ACSC Benchmarks
+ ACSC Benchmarks
 
-###BSI Benchmarks SiSyPHuS Logging
+BSI Benchmarks SiSyPHuS Logging
 
-### BSI Benchmarks SiSyPHuS-BSI Telemetrie
+BSI Benchmarks SiSyPHuS-BSI Telemetrie
 
-### FB Pro Recommendations
+FB Pro Recommendations
 
 
 # Sobre como crear un buen prompt para custom gpt, he usado chatgpt y claude.
