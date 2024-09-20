@@ -1,0 +1,107 @@
+# Ruta del archivo de salida
+$output_file = "$env:USERPROFILE\Desktop\informe_seguridad_completo.txt"
+
+# Función para agregar datos con encabezado y descripción clara
+function Append-Output {
+    param (
+        [string]$title,
+        [pscustomobject[]]$data = $null,
+        [string]$description
+    )
+
+    "`n=== $title ===`n" | Add-Content $output_file
+    "$description`n" | Add-Content $output_file
+
+    if ($data) {
+        foreach ($item in $data) {
+            $item.PSObject.Properties | ForEach-Object {
+                "$($_.Name): $($_.Value)" | Add-Content $output_file
+            }
+            "`n" | Add-Content $output_file
+        }
+    } else {
+        "No se encontraron datos para $title`n" | Add-Content $output_file
+    }
+}
+
+# Limpiar archivo previo
+Remove-Item $output_file -ErrorAction Ignore
+
+# Cabecera inicial del informe
+"=== Informe Completo de Seguridad del Sistema ===`n" | Add-Content $output_file
+"Generado el: $(Get-Date)" | Add-Content $output_file
+"----------------------------------------`n" | Add-Content $output_file
+
+# 1. Información del Sistema Operativo
+try {
+    $os_version = Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version
+    Append-Output "Sistema Operativo" ([pscustomobject]@{Name = "SO"; Value = "$($os_version.Caption) $($os_version.Version)"}, 
+        "Este es el sistema operativo que tienes instalado en tu equipo, junto con su versión.")
+} catch {
+    Append-Output "Error de Sistema Operativo" $null "No se pudo obtener la información del sistema operativo."
+}
+
+# 2. Escaneo de Seguridad con Windows Defender
+try {
+    "=== Escaneo de Seguridad con Windows Defender ===" | Add-Content $output_file
+    $defenderStatus = Start-MpScan -ScanType QuickScan
+    Append-Output "Resultado de Windows Defender" $defenderStatus "Resultado del escaneo rápido con Windows Defender"
+} catch {
+    Append-Output "Error en el escaneo de Windows Defender" $null "No se pudo ejecutar el escaneo de seguridad."
+}
+
+# 3. Software Instalado
+try {
+    $softwareList = Get-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*", "HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*" |
+    Select-Object DisplayName, DisplayVersion | Where-Object { $_.DisplayName -and $_.DisplayVersion } | Sort-Object DisplayName -Unique
+    Append-Output "Software Instalado" $softwareList "Lista del software instalado en tu equipo."
+} catch {
+    Append-Output "Error de Software Instalado" $null "No se pudo obtener la lista de software instalado."
+}
+
+# 4. Especificaciones del Hardware
+try {
+    $cpu_info = Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores
+    $ram_info = Get-CimInstance Win32_ComputerSystem | Select-Object @{Name="RAM (GB)"; Expression={"{0:N2}" -f ($_.TotalPhysicalMemory / 1GB)}}
+    Append-Output "Procesador" ([pscustomobject]@{Name = "Modelo"; Value = $cpu_info.Name; Núcleos = "$($cpu_info.NumberOfCores)"}, 
+        "Especificaciones del procesador de tu equipo.")
+    Append-Output "Memoria RAM" ([pscustomobject]@{Name = "RAM"; Value = "$($ram_info.'RAM (GB)') GB"}, 
+        "Cantidad de memoria RAM instalada.")
+} catch {
+    Append-Output "Error de Hardware" $null "No se pudo obtener la información del hardware."
+}
+
+# 5. Estado del Firewall y Reglas Activas
+try {
+    Get-NetFirewallProfile | ForEach-Object {
+        Append-Output "Estado del Firewall" ([pscustomobject]@{ Name = $_.Name; Estado = if ($_.Enabled) { "Habilitado" } else { "Deshabilitado" } }, 
+            "Estado del firewall en el sistema.")
+    }
+    try {
+        $firewall_rules = Get-NetFirewallRule | Where-Object { $_.Enabled -eq 'True' } | Select-Object Name, Direction, Action
+        Append-Output "Reglas activas del Firewall" $firewall_rules "Lista de reglas del firewall activas."
+    } catch {
+        Append-Output "Error de Reglas del Firewall" $null "No se pudo obtener las reglas del firewall, acceso denegado."
+    }
+} catch {
+    Append-Output "Error del Firewall" $null "No se pudo verificar el estado del firewall."
+}
+
+# 6. Eventos de Seguridad (Críticos)
+try {
+    $criticalEvents = Get-WinEvent -LogName Security -MaxEvents 1000 | Where-Object {$_.Id -in 4625, 4672, 4688, 4719} | Select-Object Id, TimeCreated, Message
+    Append-Output "Eventos de Seguridad Críticos" $criticalEvents "Eventos de seguridad filtrados."
+} catch {
+    Append-Output "Error en la captura de eventos de seguridad" $null "No se pudo obtener los eventos de seguridad, acceso denegado o no configurado."
+}
+
+# 7. Estado de Cifrado de BitLocker
+try {
+    $bitlockerStatus = Get-BitLockerVolume | Select-Object MountPoint, VolumeStatus, EncryptionPercentage
+    Append-Output "Estado de Cifrado BitLocker" $bitlockerStatus "Comprobación del estado de cifrado de los discos duros."
+} catch {
+    Append-Output "Error en BitLocker" $null "No se pudo obtener el estado de BitLocker. Es posible que BitLocker no esté configurado o no haya permisos suficientes."
+}
+
+# Mostrar el archivo de texto generado
+Invoke-Item $output_file
