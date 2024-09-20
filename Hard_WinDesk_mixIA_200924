@@ -1,107 +1,206 @@
 # Ruta del archivo de salida
-$output_file = "$env:USERPROFILE\Desktop\informe_seguridad_completo.txt"
+$output_file = "$env:USERPROFILE\Desktop\informe_seguridad_avanzado.html"
 
-# Función para agregar datos con encabezado y descripción clara
-function Append-Output {
+# Importar módulos necesarios
+Import-Module BitsTransfer
+
+# Función para agregar contenido HTML
+function Add-HtmlContent {
     param (
         [string]$title,
-        [pscustomobject[]]$data = $null,
-        [string]$description
+        [string]$content
     )
-
-    "`n=== $title ===`n" | Add-Content $output_file
-    "$description`n" | Add-Content $output_file
-
-    if ($data) {
-        foreach ($item in $data) {
-            $item.PSObject.Properties | ForEach-Object {
-                "$($_.Name): $($_.Value)" | Add-Content $output_file
-            }
-            "`n" | Add-Content $output_file
-        }
-    } else {
-        "No se encontraron datos para $title`n" | Add-Content $output_file
-    }
+    
+    @"
+    <h2>$title</h2>
+    $content
+"@
 }
 
-# Limpiar archivo previo
-Remove-Item $output_file -ErrorAction Ignore
+# Función para convertir objetos a tabla HTML
+function ConvertTo-HtmlTable {
+    param (
+        [Parameter(ValueFromPipeline=$true)]
+        [PSObject[]]$InputObject
+    )
+    
+    if ($null -eq $InputObject -or $InputObject.Count -eq 0) {
+        return "<p>No hay datos disponibles.</p>"
+    }
 
-# Cabecera inicial del informe
-"=== Informe Completo de Seguridad del Sistema ===`n" | Add-Content $output_file
-"Generado el: $(Get-Date)" | Add-Content $output_file
-"----------------------------------------`n" | Add-Content $output_file
+    $html = "<table border='1'><tr>"
+    $properties = $InputObject[0].PSObject.Properties
+    $properties | ForEach-Object { $html += "<th>$($_.Name)</th>" }
+    $html += "</tr>"
+    
+    foreach ($obj in $InputObject) {
+        $html += "<tr>"
+        $properties | ForEach-Object { 
+            $value = if ($null -eq $obj.$($_.Name)) { "N/A" } else { $obj.$($_.Name) }
+            $html += "<td>$value</td>" 
+        }
+        $html += "</tr>"
+    }
+    
+    $html += "</table>"
+    return $html
+}
+
+# Función para manejar errores y devolver un mensaje HTML
+function Handle-Error {
+    param (
+        [string]$errorMessage
+    )
+    return "<p class='error'>Error: $errorMessage</p>"
+}
+
+# Iniciar el contenido HTML
+$htmlContent = @"
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Seguridad Avanzado</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 1px solid #ecf0f1; padding-bottom: 10px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { text-align: left; padding: 8px; border: 1px solid #ddd; }
+        th { background-color: #f2f2f2; }
+        .warning { color: #e74c3c; }
+        .ok { color: #27ae60; }
+        .error { color: #c0392b; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Informe de Seguridad Avanzado</h1>
+    <p>Generado el: $(Get-Date -Format "yyyy-MM-dd HH:mm:ss")</p>
+"@
 
 # 1. Información del Sistema Operativo
 try {
-    $os_version = Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version
-    Append-Output "Sistema Operativo" ([pscustomobject]@{Name = "SO"; Value = "$($os_version.Caption) $($os_version.Version)"}, 
-        "Este es el sistema operativo que tienes instalado en tu equipo, junto con su versión.")
+    $os_info = Get-CimInstance Win32_OperatingSystem | Select-Object Caption, Version, BuildNumber, OSArchitecture
+    $htmlContent += Add-HtmlContent "Información del Sistema Operativo" (ConvertTo-HtmlTable $os_info)
 } catch {
-    Append-Output "Error de Sistema Operativo" $null "No se pudo obtener la información del sistema operativo."
+    $htmlContent += Add-HtmlContent "Información del Sistema Operativo" (Handle-Error $_.Exception.Message)
 }
 
 # 2. Escaneo de Seguridad con Windows Defender
 try {
-    "=== Escaneo de Seguridad con Windows Defender ===" | Add-Content $output_file
     $defenderStatus = Start-MpScan -ScanType QuickScan
-    Append-Output "Resultado de Windows Defender" $defenderStatus "Resultado del escaneo rápido con Windows Defender"
+    $htmlContent += Add-HtmlContent "Resultado de Windows Defender" (ConvertTo-HtmlTable $defenderStatus)
 } catch {
-    Append-Output "Error en el escaneo de Windows Defender" $null "No se pudo ejecutar el escaneo de seguridad."
+    $htmlContent += Add-HtmlContent "Resultado de Windows Defender" (Handle-Error $_.Exception.Message)
 }
 
-# 3. Software Instalado
+# 3. Software Instalado y Vulnerabilidades
 try {
     $softwareList = Get-ItemProperty "HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*", "HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*" |
-    Select-Object DisplayName, DisplayVersion | Where-Object { $_.DisplayName -and $_.DisplayVersion } | Sort-Object DisplayName -Unique
-    Append-Output "Software Instalado" $softwareList "Lista del software instalado en tu equipo."
-} catch {
-    Append-Output "Error de Software Instalado" $null "No se pudo obtener la lista de software instalado."
-}
+        Where-Object { $_.DisplayName -and $_.DisplayVersion } |
+        Select-Object DisplayName, DisplayVersion |
+        Sort-Object DisplayName -Unique
 
-# 4. Especificaciones del Hardware
-try {
-    $cpu_info = Get-CimInstance Win32_Processor | Select-Object Name, NumberOfCores
-    $ram_info = Get-CimInstance Win32_ComputerSystem | Select-Object @{Name="RAM (GB)"; Expression={"{0:N2}" -f ($_.TotalPhysicalMemory / 1GB)}}
-    Append-Output "Procesador" ([pscustomobject]@{Name = "Modelo"; Value = $cpu_info.Name; Núcleos = "$($cpu_info.NumberOfCores)"}, 
-        "Especificaciones del procesador de tu equipo.")
-    Append-Output "Memoria RAM" ([pscustomobject]@{Name = "RAM"; Value = "$($ram_info.'RAM (GB)') GB"}, 
-        "Cantidad de memoria RAM instalada.")
-} catch {
-    Append-Output "Error de Hardware" $null "No se pudo obtener la información del hardware."
-}
-
-# 5. Estado del Firewall y Reglas Activas
-try {
-    Get-NetFirewallProfile | ForEach-Object {
-        Append-Output "Estado del Firewall" ([pscustomobject]@{ Name = $_.Name; Estado = if ($_.Enabled) { "Habilitado" } else { "Deshabilitado" } }, 
-            "Estado del firewall en el sistema.")
+    # Comprobar vulnerabilidades conocidas (simulado, requeriría una base de datos real)
+    $vulnerableSoftware = $softwareList | Where-Object {
+        $_.DisplayName -match "Adobe Reader|Java|Flash Player"
     }
-    try {
-        $firewall_rules = Get-NetFirewallRule | Where-Object { $_.Enabled -eq 'True' } | Select-Object Name, Direction, Action
-        Append-Output "Reglas activas del Firewall" $firewall_rules "Lista de reglas del firewall activas."
-    } catch {
-        Append-Output "Error de Reglas del Firewall" $null "No se pudo obtener las reglas del firewall, acceso denegado."
-    }
+
+    $htmlContent += Add-HtmlContent "Software Potencialmente Vulnerable" (ConvertTo-HtmlTable $vulnerableSoftware)
 } catch {
-    Append-Output "Error del Firewall" $null "No se pudo verificar el estado del firewall."
+    $htmlContent += Add-HtmlContent "Software Potencialmente Vulnerable" (Handle-Error $_.Exception.Message)
 }
 
-# 6. Eventos de Seguridad (Críticos)
+# 4. Configuración del Firewall
 try {
-    $criticalEvents = Get-WinEvent -LogName Security -MaxEvents 1000 | Where-Object {$_.Id -in 4625, 4672, 4688, 4719} | Select-Object Id, TimeCreated, Message
-    Append-Output "Eventos de Seguridad Críticos" $criticalEvents "Eventos de seguridad filtrados."
+    $firewallProfiles = Get-NetFirewallProfile | Select-Object Name, Enabled
+    $htmlContent += Add-HtmlContent "Estado del Firewall" (ConvertTo-HtmlTable $firewallProfiles)
 } catch {
-    Append-Output "Error en la captura de eventos de seguridad" $null "No se pudo obtener los eventos de seguridad, acceso denegado o no configurado."
+    $htmlContent += Add-HtmlContent "Estado del Firewall" (Handle-Error $_.Exception.Message)
 }
 
-# 7. Estado de Cifrado de BitLocker
+# 5. Análisis de Puertos Abiertos
 try {
-    $bitlockerStatus = Get-BitLockerVolume | Select-Object MountPoint, VolumeStatus, EncryptionPercentage
-    Append-Output "Estado de Cifrado BitLocker" $bitlockerStatus "Comprobación del estado de cifrado de los discos duros."
+    $openPorts = Get-NetTCPConnection | Where-Object State -eq 'Listen' | Select-Object LocalPort, OwningProcess
+    $htmlContent += Add-HtmlContent "Puertos Abiertos" (ConvertTo-HtmlTable $openPorts)
 } catch {
-    Append-Output "Error en BitLocker" $null "No se pudo obtener el estado de BitLocker. Es posible que BitLocker no esté configurado o no haya permisos suficientes."
+    $htmlContent += Add-HtmlContent "Puertos Abiertos" (Handle-Error $_.Exception.Message)
 }
 
-# Mostrar el archivo de texto generado
-Invoke-Item $output_file
+# 6. Estado de las Actualizaciones
+try {
+    $updateSession = New-Object -ComObject Microsoft.Update.Session
+    $updateSearcher = $updateSession.CreateUpdateSearcher()
+    $pendingUpdates = @($updateSearcher.Search("IsInstalled=0 and Type='Software'").Updates)
+    $htmlContent += Add-HtmlContent "Actualizaciones Pendientes" "<p>Número de actualizaciones pendientes: $($pendingUpdates.Count)</p>"
+} catch {
+    $htmlContent += Add-HtmlContent "Actualizaciones Pendientes" (Handle-Error $_.Exception.Message)
+}
+
+# 7. Análisis de Cuentas de Usuario
+try {
+    $users = Get-LocalUser | Select-Object Name, Enabled, LastLogon
+    $htmlContent += Add-HtmlContent "Cuentas de Usuario" (ConvertTo-HtmlTable $users)
+} catch {
+    $htmlContent += Add-HtmlContent "Cuentas de Usuario" (Handle-Error $_.Exception.Message)
+}
+
+# 8. Comprobación de Políticas de Contraseñas
+try {
+    $passwordPolicy = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" | Select-Object LmCompatibilityLevel, NoLMHash
+    $htmlContent += Add-HtmlContent "Política de Contraseñas" (ConvertTo-HtmlTable $passwordPolicy)
+} catch {
+    $htmlContent += Add-HtmlContent "Política de Contraseñas" (Handle-Error $_.Exception.Message)
+}
+
+# 9. Análisis de Eventos de Seguridad Críticos
+try {
+    $criticalEvents = Get-WinEvent -LogName Security -MaxEvents 1000 | 
+        Where-Object { $_.Id -in 4625, 4648, 4719, 4765, 4766, 4794, 4897, 4964 } | 
+        Select-Object TimeCreated, Id, Message
+    $htmlContent += Add-HtmlContent "Eventos de Seguridad Críticos" (ConvertTo-HtmlTable $criticalEvents)
+} catch {
+    $htmlContent += Add-HtmlContent "Eventos de Seguridad Críticos" (Handle-Error $_.Exception.Message)
+}
+
+# 10. Comprobación de Cifrado de Disco
+try {
+    $bitlockerVolumes = Get-BitLockerVolume | Select-Object MountPoint, VolumeStatus, EncryptionPercentage
+    $htmlContent += Add-HtmlContent "Estado de Cifrado BitLocker" (ConvertTo-HtmlTable $bitlockerVolumes)
+} catch {
+    $htmlContent += Add-HtmlContent "Estado de Cifrado BitLocker" (Handle-Error $_.Exception.Message)
+}
+
+# 11. Análisis de Configuración de Red
+try {
+    $networkConfig = Get-NetIPConfiguration | Select-Object InterfaceAlias, IPv4Address, IPv4DefaultGateway
+    $htmlContent += Add-HtmlContent "Configuración de Red" (ConvertTo-HtmlTable $networkConfig)
+} catch {
+    $htmlContent += Add-HtmlContent "Configuración de Red" (Handle-Error $_.Exception.Message)
+}
+
+# 12. Comprobación de Servicios Críticos
+try {
+    $criticalServices = @('Windefend', 'WinHttpAutoProxySvc', 'Dhcp', 'Dnscache', 'mpssvc')
+    $serviceStatus = Get-Service $criticalServices | Select-Object Name, Status
+    $htmlContent += Add-HtmlContent "Estado de Servicios Críticos" (ConvertTo-HtmlTable $serviceStatus)
+} catch {
+    $htmlContent += Add-HtmlContent "Estado de Servicios Críticos" (Handle-Error $_.Exception.Message)
+}
+
+# Finalizar el contenido HTML
+$htmlContent += @"
+</body>
+</html>
+"@
+
+# Guardar el informe HTML
+$htmlContent | Out-File -FilePath $output_file -Encoding UTF8
+
+# Abrir el informe en el navegador predeterminado
+Start-Process $output_file
+
+
+
+
