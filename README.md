@@ -67,9 +67,13 @@ ESTRUCTURA 3 :
 Esquema de prompt de Jon Hernandez
 
 Contexto: Proporcionar al modelo suficiente contexto o antecedentes sobre el tema.
+
 Objetivo: Explicar claramente cuál es el objetivo o lo que se espera obtener con la interacción.
+
 Instrucciones claras: Detallar de manera precisa lo que el modelo debe hacer, cómo lo debe hacer, y si hay alguna limitación o formato deseado.
+
 Rol o tono: Si es necesario, especificar un rol que el modelo debe adoptar (por ejemplo, "actúa como un experto en marketing digital").
+
 Ejemplo (opcional): Incluir un ejemplo de cómo debe ser la respuesta o cómo no debe ser, para dar mayor precisión.
 
 ESTRUCTURA 4:
